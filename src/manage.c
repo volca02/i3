@@ -422,17 +422,24 @@ void manage_window(xcb_window_t window, xcb_get_window_attributes_cookie_t cooki
             DLOG("dock, not focusing\n");
         }
     } else {
-        DLOG("fs = %p, ws = %p, not focusing\n", fs, ws);
-        /* Insert the new container in focus stack *after* the currently
-         * focused (fullscreen) con. This way, the new container will be
-         * focused after we return from fullscreen mode */
-        Con *first = TAILQ_FIRST(&(nc->parent->focus_head));
-        if (first != nc) {
-            /* We only modify the focus stack if the container is not already
-             * the first one. This can happen when existing containers swallow
-             * new windows, for example when restarting. */
-            TAILQ_REMOVE(&(nc->parent->focus_head), nc, focused);
-            TAILQ_INSERT_AFTER(&(nc->parent->focus_head), first, nc, focused);
+        if (config.popup_during_fullscreen == PDF_LEAVE_FULLSCREEN) {
+            LOG("There is a fullscreen window, leaving fullscreen mode\n");
+            DLOG("fs = %p, ws = %p, focusing\n", fs, ws);
+            con_toggle_fullscreen(fs, CF_OUTPUT);
+            set_focus = true;
+        } else {
+            DLOG("fs = %p, ws = %p, not focusing\n", fs, ws);
+            /* Insert the new container in focus stack *after* the currently
+             * focused (fullscreen) con. This way, the new container will be
+             * focused after we return from fullscreen mode */
+            Con *first = TAILQ_FIRST(&(nc->parent->focus_head));
+            if (first != nc) {
+                /* We only modify the focus stack if the container is not already
+                 * the first one. This can happen when existing containers swallow
+                 * new windows, for example when restarting. */
+                TAILQ_REMOVE(&(nc->parent->focus_head), nc, focused);
+                TAILQ_INSERT_AFTER(&(nc->parent->focus_head), first, nc, focused);
+            }
         }
     }
 
